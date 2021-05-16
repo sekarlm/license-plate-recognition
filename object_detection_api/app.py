@@ -16,8 +16,10 @@ app = Flask(__name__)
 def get_image():
     image = request.files["images"]
     image_name = image.filename
-    image.save(os.path.join(os.getcwd(), image_name))
-    command = "python detect.py --images {} ".format(
+    image.save(os.path.join(os.getcwd(),'detections', 'tmp', image_name))
+    image_path = os.path.join(os.getcwd(),'detections', 'tmp', image_name)
+    print(image_path)
+    command = "python detect.py --images ./detections/tmp/{} ".format(
         image_name)
     # subprocess.run(command)
     os.system(command)
