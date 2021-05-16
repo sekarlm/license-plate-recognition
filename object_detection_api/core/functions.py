@@ -26,7 +26,7 @@ def crop_objects(img, data, path, allowed_classes):
             cropped_img = img[int(ymin)-5:int(ymax)+5, int(xmin)-5:int(xmax)+5]
             # construct image name and join it to path for saving crop properly
             img_name = class_name + '_' + str(counts[class_name]) + '.png'
-            img_path = os.path.join(path, img_name )
+            img_path = os.path.join(path, img_name)
             # save image
             cv2.imwrite(img_path, cropped_img)
         else:

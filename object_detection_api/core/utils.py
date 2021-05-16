@@ -23,18 +23,15 @@ def recognize_plate(img, coords):
     gray = cv2.resize(gray, None, fx = 3, fy = 3, interpolation = cv2.INTER_CUBIC)
     # perform gaussian blur to smoothen image
     blur = cv2.GaussianBlur(gray, (5,5), 0)
-    #cv2.imshow("Gray", gray)
-    #cv2.waitKey(0)
+
     # threshold the image using Otsus method to preprocess for tesseract
     ret, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
-    #cv2.imshow("Otsu Threshold", thresh)
-    #cv2.waitKey(0)
+
     # create rectangular kernel for dilation
     rect_kern = cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))
     # apply dilation to make regions more clear
     dilation = cv2.dilate(thresh, rect_kern, iterations = 1)
-    #cv2.imshow("Dilation", dilation)
-    #cv2.waitKey(0)
+
     # find contours of regions of interest within license plate
     try:
         contours, hierarchy = cv2.findContours(dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
