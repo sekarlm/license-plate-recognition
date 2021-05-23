@@ -87,8 +87,7 @@ def main(_argv):
         # by default allow all classes in .names file
         allowed_classes = list(class_names.values())
 
-        crop_path = os.path.join(os.getcwd(), 'detections', 'crop', image_name)
-
+        crop_path = os.path.join(os.getcwd(), 'detections', 'crop')
         try:
             os.mkdir(crop_path)
         except FileExistsError:
