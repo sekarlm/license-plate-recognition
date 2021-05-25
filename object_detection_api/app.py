@@ -7,11 +7,21 @@ from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
 import tensorflow as tf
 from flask import Flask, request, Response, jsonify, send_from_directory, abort
+from flask_sqlalchemy import SQLAlchemy
 import json
 
 # Initialize Flask application
 app = Flask(__name__)
 
+# Database configuration
+# need to be configured
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/license_plate'
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.secret_key = 'secret-key'
+
+db = SQLAlchemy(app)
+
+from models import Plate
 
 # API that returns image with detections on it
 @app.route('/image', methods=['POST'])
@@ -65,6 +75,13 @@ def get_image():
         digit_plate = digit_plate + digit["label"]
 
     print("digits detected: ", digit_plate)
+
+    plate_exist = Plate.query.filter_by(plate_number=digit_plate).first()
+
+    if plate_exist:
+        # kirim post
+    else:
+        # kirim error post
 
     try:
         return jsonify({"response": digit_plate}), 200
