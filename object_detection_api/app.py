@@ -1,11 +1,11 @@
 import os
 
-import core.detection_tf as dtf
-import cv2
-import numpy as np
-from object_detection.utils import label_map_util
-from object_detection.utils import visualization_utils as viz_utils
-import tensorflow as tf
+# import core.detection_tf as dtf
+# import cv2
+# import numpy as np
+# from object_detection.utils import label_map_util
+# from object_detection.utils import visualization_utils as viz_utils
+# import tensorflow as tf
 from flask import Flask, request, Response, jsonify, send_from_directory, abort
 from flask_sqlalchemy import SQLAlchemy
 import json
@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/license_plate'
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'secret-key'
 
 db = SQLAlchemy(app)
@@ -108,15 +108,9 @@ def get_image():
     plate_exist = db.session.query(Plate.id_user).filter_by(plate_number=digit_plate).scalar() is not None
 
     if plate_exist:
-        return jsonify({"response": digit_plate}), 200
+        return jsonify({"plate_number": digit_plate, "is_exist": plate_exist is not None}), 200
     else:
-        abort(404)
-
-    # try:
-    #     return jsonify({"response": digit_plate}), 200
-    # except FileNotFoundError:
-    #     abort(404)
-
+        return jsonify({"response": f"User with {digit_plate} plate number not found"}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)
