@@ -1,11 +1,11 @@
 import os
 
-# import core.detection_tf as dtf
-# import cv2
-# import numpy as np
-# from object_detection.utils import label_map_util
-# from object_detection.utils import visualization_utils as viz_utils
-# import tensorflow as tf
+import core.detection_tf as dtf
+import cv2
+import numpy as np
+from object_detection.utils import label_map_util
+from object_detection.utils import visualization_utils as viz_utils
+import tensorflow as tf
 from flask import Flask, request, Response, jsonify, send_from_directory, abort
 from flask_sqlalchemy import SQLAlchemy
 import json
