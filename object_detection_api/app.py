@@ -1,4 +1,6 @@
 import os
+import datetime
+from math import ceil
 
 import core.detection_tf as dtf
 import cv2
@@ -6,6 +8,7 @@ import numpy as np
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as viz_utils
 import tensorflow as tf
+
 from flask import Flask, request, Response, jsonify, send_from_directory, abort
 from flask_sqlalchemy import SQLAlchemy
 import json
@@ -13,44 +16,18 @@ import json
 # Initialize Flask application
 app = Flask(__name__)
 
+# Parking price per hours
+PRICE = 5000
+
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/license_plate'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}/{DATABASE_NAME}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'secret-key'
 
 db = SQLAlchemy(app)
 
-# Database model
-class Plate(db.Model):
-    __tablename__ = 'plate_numbers'
-
-    id_user = db.Column(db.Integer)
-    id_transaction = db.Column(db.Integer, primary_key=True)
-    plate_number = db.Column(db.String(8), unique=True)
-    place = db.Column(db.String(64))
-    time_enter = db.Column(db.DateTime(timezone=True))
-    time_out = db.Column(db.DateTime(timezone=True))
-    price = db.Column(db.Numeric())
-
-    def __init__(self, id_user, id_transaction, plate_number, place):
-        self.id_user = id_user
-        self.id_transaction = id_transaction
-        self.plate_number = plate_number
-        self.place = place
-
-    def __repr__(self) -> str:
-        return '<id_transaction {}>'.format(self.id_transaction)
-
-    def serialize(self):
-        return {
-            'id_user': self.id_user,
-            'id_transaction': self.id_transaction,
-            'plate_number': self.plate_number,
-            'place': self.place,
-            'time_enter': self.time_enter,
-            'time_out': self.time_out,
-            'price': self.price
-        }
+# Import database models
+from models import *
 
 # API that returns image with detections on it
 @app.route('/image', methods=['POST'])
@@ -105,12 +82,33 @@ def get_image():
 
     print("digits detected: ", digit_plate)
 
-    plate_exist = db.session.query(Plate.id_user).filter_by(plate_number=digit_plate).scalar() is not None
+    # Filter query to database
+    vehicle = db.session.query(Vehicle).filter_by(plate_number=digit_plate).scalar()
+    transaction = db.session.query(Transaction).filter_by(plate_number=digit_plate).scalar()
 
-    if plate_exist:
-        return jsonify({"plate_number": digit_plate, "is_exist": plate_exist is not None}), 200
+    # Check and update database
+    if (vehicle is not None) and (transaction is not None):
+        try:
+            transaction.time_out = datetime.datetime.now().time()
+            db.session.commit()
+            time_enter = datetime.datetime.combine(datetime.date.today(), transaction.time_enter)
+            time_out = datetime.datetime.combine(datetime.date.today(), transaction.time_out)
+            time_diff_in_hours = ceil((time_out - time_enter).total_seconds()/3600)
+            transaction.price = time_diff_in_hours * PRICE
+            db.session.commit()
+            return jsonify({"response": "Update transaction table succeed"}), 200
+        except:
+            return jsonify({"response": "Can't update transaction table"}), 505
+    elif (vehicle is not None):
+        try:
+            new_transaction = Transaction(id_user=vehicle.id_user, plate_number=vehicle.plate_number, place='Plaza Senayan', time_enter=datetime.datetime.now().time())
+            db.session.add(new_transaction)
+            db.session.commit()
+            return jsonify({"response": "Add new record to transaction table succeed"}), 200
+        except:
+            return jsonify({"response": "Can't add new record to transaction table"}), 505
     else:
-        return jsonify({"response": f"User with {digit_plate} plate number not found"}), 404
+        return jsonify({"response": "User not found"}), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
