@@ -89,7 +89,7 @@ def get_image():
 
     # Filter query to database
     vehicle = db.session.query(Vehicle).filter_by(plate_number=digit_plate).scalar()
-    transaction = db.session.query(Transaction).filter_by(plate_number=digit_plate).scalar()
+    transaction = db.session.query(Transaction).filter_by(plate_number=digit_plate, place=place).scalar()
 
     # Check and update database
     if (vehicle is not None) and (transaction is not None):
