@@ -17,7 +17,8 @@ import json
 app = Flask(__name__)
 
 # Parking price per hours
-PRICE = 5000
+LOW_PRICE = 3000
+HIGH_PRICE = 5000
 
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}/{DATABASE_NAME}'
@@ -98,7 +99,11 @@ def get_image():
             time_enter = datetime.datetime.combine(datetime.date.today(), transaction.time_enter)
             time_out = datetime.datetime.combine(datetime.date.today(), transaction.time_out)
             time_diff_in_hours = ceil((time_out - time_enter).total_seconds()/3600)
-            transaction.price = time_diff_in_hours * PRICE
+            time_diff_in_hours = (time_out - time_enter).total_seconds()/3600
+            if time_diff_in_hours < 1:
+                transaction.price = LOW_PRICE
+            else:
+                transaction.price = ceil(time_diff_in_hours) * HIGH_PRICE
             db.session.commit()
             return jsonify({"response": "Update transaction table succeed"}), 200
         except:
