@@ -32,18 +32,22 @@ from models import *
 # API that returns image with detections on it
 @app.route('/image', methods=['POST'])
 def get_image():
-    category_index = label_map_util.create_category_index_from_labelmap('./Tensorflow/annotations/label_map.pbtxt')
-
+    # Unpack request
     image = request.files["images"]
     IMAGE_REQUEST = image.filename
     image.save(os.path.join(os.getcwd(), 'detections', 'tmp', IMAGE_REQUEST))
     IMAGE_PATH = os.path.join(os.getcwd(), 'detections', 'tmp', IMAGE_REQUEST)
-    command = "python detect.py --images ./detections/tmp/{} ".format(
-        IMAGE_REQUEST)
+    place = dict(request.form)["place"]
+
+    category_index = label_map_util.create_category_index_from_labelmap('./Tensorflow/annotations/label_map.pbtxt')
+
+    # Detect license plate object
+    command = "python detect.py --images ./detections/tmp/{} ".format(IMAGE_REQUEST)
     os.system(command)
 
     IMAGE_CROPPED = os.path.join(os.getcwd(), 'detections', 'crop', 'license_plate_1.png')
 
+    # Detect digit license plate
     img = cv2.imread(IMAGE_CROPPED)
     image_np = np.array(img)
 
@@ -101,7 +105,7 @@ def get_image():
             return jsonify({"response": "Can't update transaction table"}), 505
     elif (vehicle is not None):
         try:
-            new_transaction = Transaction(id_user=vehicle.id_user, plate_number=vehicle.plate_number, place='Plaza Senayan', time_enter=datetime.datetime.now().time())
+            new_transaction = Transaction(id_user=vehicle.id_user, plate_number=vehicle.plate_number, place=place, time_enter=datetime.datetime.now().time())
             db.session.add(new_transaction)
             db.session.commit()
             return jsonify({"response": "Add new record to transaction table succeed"}), 200
