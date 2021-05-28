@@ -1,6 +1,7 @@
 import os
 import datetime
 from math import ceil
+from werkzeug.datastructures import ImmutableMultiDict
 
 import core.detection_tf as dtf
 import cv2
@@ -21,6 +22,7 @@ LOW_PRICE = 3000
 HIGH_PRICE = 5000
 
 # Database configuration
+from db_config import DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_NAME
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}/{DATABASE_NAME}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'secret-key'
@@ -28,7 +30,7 @@ app.secret_key = 'secret-key'
 db = SQLAlchemy(app)
 
 # Import database models
-from models import *
+from db_models import *
 
 # API that returns image with detections on it
 @app.route('/image', methods=['POST'])
@@ -89,35 +91,86 @@ def get_image():
 
     # Filter query to database
     vehicle = db.session.query(Vehicle).filter_by(plate_number=digit_plate).scalar()
-    transaction = db.session.query(Transaction).filter_by(plate_number=digit_plate, place=place).scalar()
-
-    # Check and update database
+    transaction = db.session.query(Transaction).filter_by(plate_number=digit_plate, place=place, isDone=False).scalar()
+    
+    # If user with plate_number <digit_plate> parking at <place> --> want to quit parking lot
     if (vehicle is not None) and (transaction is not None):
         try:
+            # Add time_out
             transaction.time_out = datetime.datetime.now().time()
             db.session.commit()
+            
+            # Add parking fee
             time_enter = datetime.datetime.combine(datetime.date.today(), transaction.time_enter)
             time_out = datetime.datetime.combine(datetime.date.today(), transaction.time_out)
-            time_diff_in_hours = ceil((time_out - time_enter).total_seconds()/3600)
             time_diff_in_hours = (time_out - time_enter).total_seconds()/3600
             if time_diff_in_hours < 1:
                 transaction.price = LOW_PRICE
             else:
                 transaction.price = ceil(time_diff_in_hours) * HIGH_PRICE
             db.session.commit()
-            return jsonify({"response": "Update transaction table succeed"}), 200
+
+            # Update isDone
+            transaction.isDone = True
+            db.session.commit()
+
+            time_enter = transaction.time_enter
+            time_out = transaction.time_out
+
+            return jsonify({
+                "response": "update transaction succeeded",
+                "id_user": transaction.id_user,
+                "id_transaction": transaction.id_transaction,
+                "plate_number": transaction.plate_number,
+                "place": transaction.place,
+                "time_enter": time_enter.strftime("%H:%M:%S"),
+                "time_out": time_out.strftime("%H:%M:%S"),
+                "price": str(transaction.price),
+                "isDone": str(transaction.isDone)
+            }), 200
         except:
-            return jsonify({"response": "Can't update transaction table"}), 505
+            return jsonify({
+                "response": "update transaction failed",
+                "id_user": transaction.id_user,
+                "id_transaction": transaction.id_transaction,
+                "plate_number": transaction.plate_number,
+                "place": transaction.place,
+                "time_enter": time_enter.strftime("%H:%M:%S"),
+            }), 505
+    # If user with plate_number <digit_plate> is exist and want to parking at <place>
     elif (vehicle is not None):
         try:
+            # Add new transaction
+            print(datetime.datetime.now().time())
             new_transaction = Transaction(id_user=vehicle.id_user, plate_number=vehicle.plate_number, place=place, time_enter=datetime.datetime.now().time())
             db.session.add(new_transaction)
             db.session.commit()
-            return jsonify({"response": "Add new record to transaction table succeed"}), 200
+
+            time_enter = new_transaction.time_enter
+
+            return jsonify({
+                "response": "add new transaction record succeed",            
+                "id_user": new_transaction.id_user,
+                "id_transaction": new_transaction.id_transaction,
+                "plate_number": new_transaction.plate_number,
+                "place": new_transaction.place,
+                "time_enter": time_enter.strftime("%H:%M:%S"),
+                "time_out": str(new_transaction.time_out),
+                "price": str(new_transaction.price),
+                "isDone": str(new_transaction.isDone)
+            }), 200
         except:
-            return jsonify({"response": "Can't add new record to transaction table"}), 505
+            return jsonify({
+                "response": "add new transaction record failed",
+                "id_user": vehicle.id_user,
+                "plate_number": digit_plate
+            }), 505
+    # If user not found
     else:
-        return jsonify({"response": "User not found"}), 404
+        return jsonify({
+            "response": "user not found",
+            "plate_number": digit_plate
+        }), 404
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True)

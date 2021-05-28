@@ -1,0 +1,5 @@
+DATABASE_USER = "postgres"
+DATABASE_HOST = "34.101.70.18"
+DATABASE_NAME = "smart-parking"
+DATABASE_PASSWORD = "2fuckingco0l"
+DATABASE_PORT = 5432

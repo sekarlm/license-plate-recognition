@@ -9,12 +9,12 @@ class Vehicle(db.Model):
     car_type = db.Column(db.String(8))
     img_stnk = db.Column(db.String(64))
 
-    def __init__(self, id_vehicle, id_user, plate_number, car_type, car_color):
+    def __init__(self, id_vehicle, id_user, plate_number, car_type, img_stnk):
         self.id_vehicle = id_vehicle
         self.id_user = id_user
         self.plate_number = plate_number
         self.car_type = car_type
-        self.car_color = car_color
+        self.img_stnk = img_stnk
 
     def __repr__(self) -> str:
         return '<Vehicle -- id_user: {} id_vehicle: {}>'.format(self.id_user, self.id_vehicle)
@@ -25,7 +25,7 @@ class Vehicle(db.Model):
             'id_user': self.id_user,
             'plate_number': self.plate_number,
             'car_type': self.car_type,
-            'car_color': self.car_color
+            'img_stnk': self.img_stnk,
         }
 
 class Transaction(db.Model):
@@ -38,12 +38,14 @@ class Transaction(db.Model):
     time_enter = db.Column(db.DateTime(timezone=True))
     time_out = db.Column(db.DateTime(timezone=True))
     price = db.Column(db.Numeric())
+    isDone = db.Column(db.Boolean())
 
-    def __init__(self, id_user, plate_number, place, time_enter):
+    def __init__(self, id_user, plate_number, place, time_enter, isDone=False):
         self.id_user = id_user
         self.plate_number = plate_number
         self.place = place
         self.time_enter = time_enter
+        self.isDone = isDone
 
     def __repr__(self) -> str:
         return '<Vehicle -- id_user: {} id_transaction: {} time_enter: {}>'.format(self.id_user, self.id_transaction, self.time_enter)
@@ -56,5 +58,6 @@ class Transaction(db.Model):
             'place': self.place,
             'time_enter': self.time_enter,
             'time_out': self.time_out,
-            'price': self.price
+            'price': self.price,
+            'isDone': self.isDone
         }
