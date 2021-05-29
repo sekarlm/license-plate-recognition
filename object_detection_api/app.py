@@ -21,6 +21,9 @@ app = Flask(__name__)
 LOW_PRICE = 3000
 HIGH_PRICE = 5000
 
+# FCM URL
+FCM_URL = 'https://fcm.googleapis.com/fcm/send'
+
 # Database configuration
 from db_config import DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_NAME
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}/{DATABASE_NAME}'
@@ -31,6 +34,9 @@ db = SQLAlchemy(app)
 
 # Import database models
 from db_models import *
+
+# Import method to send request to android
+from app_utils import post_to_android
 
 # API that returns image with detections on it
 @app.route('/image', methods=['POST'])
@@ -117,6 +123,17 @@ def get_image():
             time_enter = transaction.time_enter
             time_out = transaction.time_out
 
+            # Sent post to android
+            data = jsonify({
+                "plate_number": transaction.plate_number,
+                "place": transaction.place,
+                "time_enter": time_enter.strftime("%H:%M:%S"),
+                "time_out": time_out.strftime("%H:%M:%S"),
+                "price": str(transaction.price)
+            })
+
+            post_to_android(FCM_URL, data)
+
             return jsonify({
                 "response": "update transaction succeeded",
                 "id_user": transaction.id_user,
@@ -147,6 +164,15 @@ def get_image():
             db.session.commit()
 
             time_enter = new_transaction.time_enter
+
+            # Sent post to android
+            data = jsonify({
+                "plate_number": new_transaction.plate_number,
+                "place": new_transaction.place,
+                "time_enter": time_enter.strftime("%H:%M:%S")
+            })
+
+            post_to_android(FCM_URL, data)
 
             return jsonify({
                 "response": "add new transaction record succeed",            
