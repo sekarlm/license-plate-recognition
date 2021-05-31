@@ -113,10 +113,6 @@ def get_image():
                 transaction.price = ceil(time_diff_in_hours) * HIGH_PRICE
             db.session.commit()
 
-            # Update isDone
-            transaction.isDone = True
-            db.session.commit()
-
             time_enter = transaction.time_enter
             time_out = transaction.time_out
             price = transaction.price
@@ -157,8 +153,7 @@ def get_image():
                 "place": transaction.place,
                 "time_enter": time_enter.strftime("%H:%M:%S"),
                 "time_out": time_out.strftime("%H:%M:%S"),
-                "price": str(transaction.price),
-                "isDone": str(transaction.isDone)
+                "price": str(transaction.price)
             }), 200
         except:
             return jsonify({
@@ -204,8 +199,7 @@ def get_image():
                 "place": new_transaction.place,
                 "time_enter": time_enter.strftime("%H:%M:%S"),
                 "time_out": str(new_transaction.time_out),
-                "price": str(new_transaction.price),
-                "isDone": str(new_transaction.isDone)
+                "price": str(new_transaction.price)
             }), 200
         except:
             return jsonify({
