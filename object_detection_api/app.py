@@ -215,9 +215,6 @@ def get_image():
             }), 505
     # If user not found
     else:
-        via_command_line()
-        # via_python_request()
-        # via_pycurl()
         return jsonify({
             "response": "user not found",
             "plate_number": digit_plate
