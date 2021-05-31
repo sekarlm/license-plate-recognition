@@ -4,22 +4,24 @@ import pycurl
 from io import StringIO
 import json
 import sys
+import certifi
 
 FCM_URL = 'https://fcm.googleapis.com/fcm/send'
 AUTH_KEY = 'key=AAAA5dJgw6U:APA91bHbY5hcu2ERO1tiG3d66oqZAUWbDpSHCsFmq4Gt5mKuf73NmhtbkPNzqkd6GOWINEayBnzLbzBjlIGQ4Tj6kBwcDuHT1OkqlrmtNz-F9bKDiN6NXqy52FR02YcWa7qp3avAQy'
 DEVICE_KEY = "eIw6hLUrSJSJ5Pd969oiZY:APA91bE2sivMuvZOup9IgkD3D2RHVad-Tp4fd0o3QcRm0cm-3K7HYnBaAVYG5QO8ffZ4YtVJ0xRSLlO7tbLtmVWmsG1VFiz5av04HFJnHbqeHxkQyvL3Y6EsvusgTwJvI1_VzOba1ATe"
 
-def curl_command_line(notif_data):
+def curl_command_line(data, notif):
     data = {
-        "to": DEVICE_KEY,
-        "data": notif_data
+        "to" : DEVICE_KEY,
+        "data" : data,
+        "notification": notif
     }
 
-    command = 'curl -X POST -H "Authorization: {} -H "Content-Type: application/json" -d "{}" {}'.format(AUTH_KEY, data, FCM_URL)
+    command = 'curl -X POST -H "Authorization: {}" -H "Content-Type: application/json" -d "{}" {}'.format(AUTH_KEY, data, FCM_URL)
     print(command)
     os.system(command)
 
-def python_request(notif_data):
+def python_request(data, notif):
     headers = {
         'Authorization': AUTH_KEY,
         'Content-Type': 'application/json',
@@ -27,14 +29,16 @@ def python_request(notif_data):
 
     data = {
         "to": DEVICE_KEY,
-        "data": notif_data
+        "data": data,
+        "notification": notif
     }
 
     response = requests.post(FCM_URL, headers=headers, data=data)
     print(response.status_code)
 
-def python_pycurl(notif_data):
+def python_pycurl(data, notif):
     curl = pycurl.Curl()
+    curl.setopt(pycurl.CAINFO, certifi.where())
     curl.setopt(pycurl.URL, FCM_URL)
 
     header = ['Authorization: {}'.format(AUTH_KEY), 'Content-Type: application/json']
@@ -42,7 +46,7 @@ def python_pycurl(notif_data):
     curl.setopt(pycurl.POST, 1)
 
     # If you want to set a total timeout, say, 3 seconds
-    curl.setopt(pycurl.TIMEOUT_MS, 3000)
+    curl.setopt(pycurl.TIMEOUT_MS, 5000)
 
     ## depending on whether you want to print details on stdout, uncomment either
     curl.setopt(pycurl.VERBOSE, 1) # to print entire request flow
@@ -55,7 +59,8 @@ def python_pycurl(notif_data):
     #  the connection.
     data = {
         "to": DEVICE_KEY,
-        "data": notif_data
+        "data": data,
+        "notification": notif
     }
 
     body_as_json_string = json.dumps(data) # dict to json
@@ -84,12 +89,7 @@ if __name__ == '__main__':
     place = "Central Park"
     price = "Rp 35.000"
 
-    notif_data = json.dumps({
-        "notification": {
-            "body": "You are entering {} parking lot!".format(place),
-            "title":"You are going in",
-            "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
-        },
+    data = {
         "body": "Please purchase the parking fare!",
         "title":"You are going out",
         "timein": time_enter,
@@ -97,16 +97,22 @@ if __name__ == '__main__':
         "totaltime": duration,
         "fare": price,
         "location": place
-    })
+    }
+
+    notif = {
+        "body": "Notification: Bayar woi!",
+        "title": "Notification: You are going out",
+        "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
+    }
 
     if mode == 'command-line':
-        curl_command_line(notif_data)
+        curl_command_line(data, notif)
         print('command-line succeeded')
     
     if mode == 'request':
-        python_request(notif_data)
+        python_request(data, notif)
         print('request succeeded')
 
     if mode == 'pycurl':
-        python_pycurl(notif_data)
+        python_pycurl(data, notif)
         print('pycurl succeeded')

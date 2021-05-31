@@ -118,32 +118,25 @@ def get_image():
             price = transaction.price
 
             # Sent post to android
-            notif_data = jsonify({
-                "notification": {
-                    "body": "Please purchase the parking fare!",
-                    "title":"You are going out",
-                    "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
-                },
+            data = jsonify({
                 "body": "Please purchase the parking fare!",
                 "title":"You are going out",
-                "timein": time_enter,
-                "timeout": time_out,
+                "timein": time_enter.strftime("%H:%M:%S"),
+                "timeout": time_out.strftime("%H:%M:%S"),
                 "totaltime": (time_out - time_enter),
-                "fare": price,
+                "fare": str(price),
                 "location": place
             })
-            
-            curl_command_line(notif_data)
-            # python_request(notif_data)
-            # python_pycurl(notif_data)
 
-            data = jsonify({
-                "plate_number": transaction.plate_number,
-                "place": transaction.place,
-                "time_enter": time_enter.strftime("%H:%M:%S"),
-                "time_out": time_out.strftime("%H:%M:%S"),
-                "price": str(transaction.price)
+            notif = jsonify({
+                "body": "You are entering {} parking lot!".format(place),
+                "title":"You are going in",
+                "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
             })
+            
+            curl_command_line(data, notif)
+            # python_request(data, notif)
+            # python_pycurl(data, notif)
 
             return jsonify({
                 "response": "update transaction succeeded",
@@ -176,20 +169,22 @@ def get_image():
             time_enter = new_transaction.time_enter
 
             # Sent post to android
-            notif_data = jsonify({
-                "notification": {
-                    "body": "You are entering {} parking lot!".format(place),
-                    "title":"You are going in",
-                    "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
-                },
+            data = jsonify({
                 "body": "Please purchase the parking fare!",
                 "title":"You are going out",
-                "timein": time_enter,
+                "timein": time_enter.strftime("%H:%M:%S"),
                 "location": place
             })
-            curl_command_line(notif_data)
-            # python_request(notif_data)
-            # python_pycurl(notif_data)
+
+            notif = jsonify({
+                "body": "You are entering {} parking lot!".format(place),
+                "title":"You are going in",
+                "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
+            })
+
+            curl_command_line(data, notif)
+            # python_request(data, notif)
+            # python_pycurl(data, notif)
 
             return jsonify({
                 "response": "add new transaction record succeed",            
