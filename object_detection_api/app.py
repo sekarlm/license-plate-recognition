@@ -21,9 +21,6 @@ app = Flask(__name__)
 LOW_PRICE = 3000
 HIGH_PRICE = 5000
 
-# FCM URL
-FCM_URL = 'https://fcm.googleapis.com/fcm/send'
-
 # Database configuration
 from db_config import DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_NAME
 app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}/{DATABASE_NAME}'
@@ -36,7 +33,7 @@ db = SQLAlchemy(app)
 from db_models import *
 
 # Import method to send request to android
-from app_utils import post_to_android
+from notification import curl_command_line, python_request, python_pycurl
 
 # API that returns image with detections on it
 @app.route('/image', methods=['POST'])
@@ -122,8 +119,28 @@ def get_image():
 
             time_enter = transaction.time_enter
             time_out = transaction.time_out
+            price = transaction.price
 
             # Sent post to android
+            notif_data = jsonify({
+                "notification": {
+                    "body": "Please purchase the parking fare!",
+                    "title":"You are going out",
+                    "click_action": "com.dicoding.nextparking.ui.payment.OutPaymentFragment"
+                },
+                "body": "Please purchase the parking fare!",
+                "title":"You are going out",
+                "place": place,
+                "timein": time_enter,
+                "timeout": time_out,
+                "duration": (time_out - time_enter),
+                "fare": price
+            })
+            
+            curl_command_line(notif_data)
+            # python_request(notif_data)
+            # python_pycurl(notif_data)
+
             data = jsonify({
                 "plate_number": transaction.plate_number,
                 "place": transaction.place,
@@ -131,8 +148,6 @@ def get_image():
                 "time_out": time_out.strftime("%H:%M:%S"),
                 "price": str(transaction.price)
             })
-
-            post_to_android(FCM_URL, data)
 
             return jsonify({
                 "response": "update transaction succeeded",
@@ -166,13 +181,20 @@ def get_image():
             time_enter = new_transaction.time_enter
 
             # Sent post to android
-            data = jsonify({
-                "plate_number": new_transaction.plate_number,
-                "place": new_transaction.place,
-                "time_enter": time_enter.strftime("%H:%M:%S")
+            notif_data = jsonify({
+                "notification": {
+                    "body": "You are entering {} parking lot!".format(place),
+                    "title":"You are going in",
+                    "click_action": "com.dicoding.nextparking.ui.payment.OutPaymentFragment"
+                },
+                "body": "Please purchase the parking fare!",
+                "title":"You are going out",
+                "place": place,
+                "timein": time_enter
             })
-
-            post_to_android(FCM_URL, data)
+            curl_command_line(notif_data)
+            # python_request(notif_data)
+            # python_pycurl(notif_data)
 
             return jsonify({
                 "response": "add new transaction record succeed",            
@@ -193,6 +215,9 @@ def get_image():
             }), 505
     # If user not found
     else:
+        via_command_line()
+        # via_python_request()
+        # via_pycurl()
         return jsonify({
             "response": "user not found",
             "plate_number": digit_plate
