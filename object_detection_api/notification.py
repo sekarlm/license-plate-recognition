@@ -3,10 +3,11 @@ import os
 import pycurl
 from io import StringIO
 import json
+import sys
 
-FCM_URL = 'your-fcm-url'
-AUTH_KEY = 'your-auth-key'
-DEVICE_KEY = "your-device-key"
+FCM_URL = 'https://fcm.googleapis.com/fcm/send'
+AUTH_KEY = 'key=AAAA5dJgw6U:APA91bHbY5hcu2ERO1tiG3d66oqZAUWbDpSHCsFmq4Gt5mKuf73NmhtbkPNzqkd6GOWINEayBnzLbzBjlIGQ4Tj6kBwcDuHT1OkqlrmtNz-F9bKDiN6NXqy52FR02YcWa7qp3avAQy'
+DEVICE_KEY = "eIw6hLUrSJSJ5Pd969oiZY:APA91bE2sivMuvZOup9IgkD3D2RHVad-Tp4fd0o3QcRm0cm-3K7HYnBaAVYG5QO8ffZ4YtVJ0xRSLlO7tbLtmVWmsG1VFiz5av04HFJnHbqeHxkQyvL3Y6EsvusgTwJvI1_VzOba1ATe"
 
 def curl_command_line(notif_data):
     data = {
@@ -72,3 +73,40 @@ def python_pycurl(notif_data):
 
     # don't forget to release connection when finished
     curl.close()
+
+# testing code
+if __name__ == '__main__':
+    mode = sys.argv[1]
+
+    time_enter = "12:34:33"
+    time_out = "13:31:45"
+    duration = "2h 20m 45s"
+    place = "Central Park"
+    price = "Rp 35.000"
+
+    notif_data = json.dumps({
+        "notification": {
+            "body": "You are entering {} parking lot!".format(place),
+            "title":"You are going in",
+            "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
+        },
+        "body": "Please purchase the parking fare!",
+        "title":"You are going out",
+        "timein": time_enter,
+        "timeout": time_out,
+        "totaltime": duration,
+        "fare": price,
+        "location": place
+    })
+
+    if mode == 'command-line':
+        curl_command_line(notif_data)
+        print('command-line succeeded')
+    
+    if mode == 'request':
+        python_request(notif_data)
+        print('request succeeded')
+
+    if mode == 'pycurl':
+        python_pycurl(notif_data)
+        print('pycurl succeeded')

@@ -126,15 +126,15 @@ def get_image():
                 "notification": {
                     "body": "Please purchase the parking fare!",
                     "title":"You are going out",
-                    "click_action": "com.dicoding.nextparking.ui.payment.OutPaymentFragment"
+                    "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
                 },
                 "body": "Please purchase the parking fare!",
                 "title":"You are going out",
-                "place": place,
                 "timein": time_enter,
                 "timeout": time_out,
-                "duration": (time_out - time_enter),
-                "fare": price
+                "totaltime": (time_out - time_enter),
+                "fare": price,
+                "location": place
             })
             
             curl_command_line(notif_data)
@@ -185,12 +185,12 @@ def get_image():
                 "notification": {
                     "body": "You are entering {} parking lot!".format(place),
                     "title":"You are going in",
-                    "click_action": "com.dicoding.nextparking.ui.payment.OutPaymentFragment"
+                    "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
                 },
                 "body": "Please purchase the parking fare!",
                 "title":"You are going out",
-                "place": place,
-                "timein": time_enter
+                "timein": time_enter,
+                "location": place
             })
             curl_command_line(notif_data)
             # python_request(notif_data)
