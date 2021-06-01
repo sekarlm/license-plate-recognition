@@ -61,3 +61,23 @@ class Transaction(db.Model):
             'price': self.price,
             'isDone': self.isDone
         }
+
+class Device(db.Model):
+    __tablename__ = 'user_device'
+
+    id_user = db.Column(db.Integer, primary_key=True)
+    device_token = db.Column(db.String(256))
+
+
+    def __init__(self, id_user, device_token):
+        self.id_user = id_user
+        self.device_token = device_token
+
+    def __repr__(self) -> str:
+        return '<Device -- id_user: {} device_token: {}>'.format(self.id_user, self.device_token)
+
+    def serialize(self):
+        return {
+            'id_user': self.id_user,
+            'device_token': self.device_token
+        }
