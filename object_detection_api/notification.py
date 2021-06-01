@@ -4,115 +4,46 @@ import pycurl
 from io import StringIO
 import json
 import sys
-import certifi
 
 FCM_URL = 'https://fcm.googleapis.com/fcm/send'
-AUTH_KEY = 'key=AAAA5dJgw6U:APA91bHbY5hcu2ERO1tiG3d66oqZAUWbDpSHCsFmq4Gt5mKuf73NmhtbkPNzqkd6GOWINEayBnzLbzBjlIGQ4Tj6kBwcDuHT1OkqlrmtNz-F9bKDiN6NXqy52FR02YcWa7qp3avAQy'
-DEVICE_KEY = "eIw6hLUrSJSJ5Pd969oiZY:APA91bE2sivMuvZOup9IgkD3D2RHVad-Tp4fd0o3QcRm0cm-3K7HYnBaAVYG5QO8ffZ4YtVJ0xRSLlO7tbLtmVWmsG1VFiz5av04HFJnHbqeHxkQyvL3Y6EsvusgTwJvI1_VzOba1ATe"
+AUTH_KEY = 'key=AAAAqwEcUuY:APA91bG_UTv4R0QS4lvGcKSdsCOa2Rd0rZQci03nRHa9FgN9u3us8bupo2DWNzXmCLqqHo-pa-XjYjzlMPQI-lQug-mNKKWeOn70niTAGqPYAH2YySrV3FCzJgkNppbTUOK2W40ar6Mp'
+DEVICE_KEY = 'etk7hgw9Q9OxuMbh3qNezw:APA91bEcwEMEc-839HwY5NMXPm_w_sXE--LULRL4uxKq1gUlMvmtOl_SGZQrxxNdAeelYhC50JjB-lcI_YO3bH-KV9MtzzzFcREmd-YT1j3vVjOrkvelKlRdL0YNqkqeGFnNNoM3l2Od'
 
-def curl_command_line(data, notif):
-    data = {
-        "to" : DEVICE_KEY,
-        "data" : data,
-        "notification": notif
-    }
-
-    command = 'curl -X POST -H "Authorization: {}" -H "Content-Type: application/json" -d "{}" {}'.format(AUTH_KEY, data, FCM_URL)
+def send_notification(notif_data):
+    
+    command = 'curl -X POST -H "Authorization: {}" -H "Content-Type: application/json" -d \'{}\' {}'.format(AUTH_KEY, notif_data, FCM_URL)
     print(command)
     os.system(command)
-
-def python_request(data, notif):
-    headers = {
-        'Authorization': AUTH_KEY,
-        'Content-Type': 'application/json',
-    }
-
-    data = {
-        "to": DEVICE_KEY,
-        "data": data,
-        "notification": notif
-    }
-
-    response = requests.post(FCM_URL, headers=headers, data=data)
-    print(response.status_code)
-
-def python_pycurl(data, notif):
-    curl = pycurl.Curl()
-    curl.setopt(pycurl.CAINFO, certifi.where())
-    curl.setopt(pycurl.URL, FCM_URL)
-
-    header = ['Authorization: {}'.format(AUTH_KEY), 'Content-Type: application/json']
-    curl.setopt(pycurl.HTTPHEADER, header)
-    curl.setopt(pycurl.POST, 1)
-
-    # If you want to set a total timeout, say, 3 seconds
-    curl.setopt(pycurl.TIMEOUT_MS, 5000)
-
-    ## depending on whether you want to print details on stdout, uncomment either
-    curl.setopt(pycurl.VERBOSE, 1) # to print entire request flow
-    ## or
-    # curl.setopt(pycurl.WRITEFUNCTION, lambda x: None) # to keep stdout clean
-
-    # preparing body the way pycurl.READDATA wants it
-    # NOTE: you may reuse curl object setup at this point
-    #  if sending POST repeatedly to the url. It will reuse
-    #  the connection.
-    data = {
-        "to": DEVICE_KEY,
-        "data": data,
-        "notification": notif
-    }
-
-    body_as_json_string = json.dumps(data) # dict to json
-    body_as_file_object = StringIO(body_as_json_string)
-
-    # prepare and send. See also: pycurl.READFUNCTION to pass function instead
-    curl.setopt(pycurl.READDATA, body_as_file_object) 
-    curl.setopt(pycurl.POSTFIELDSIZE, len(body_as_json_string))
-    curl.perform()
-
-    # you may want to check HTTP response code, e.g.
-    status_code = curl.getinfo(pycurl.RESPONSE_CODE)
-    if status_code != 200:
-        print("Aww Snap :( Server returned HTTP status code {}".format(status_code))
-
-    # don't forget to release connection when finished
-    curl.close()
 
 # testing code
 if __name__ == '__main__':
     mode = sys.argv[1]
 
-    time_enter = "12:34:33"
-    time_out = "13:31:45"
-    duration = "2h 20m 45s"
-    place = "Central Park"
-    price = "Rp 35.000"
+    time_enter = "02:09:430"
+    time_out = "03:39:450"
+    duration = "24h 45m 450s"
+    place = "Rumah Anna"
+    price = "Rp 35.000.000"
 
-    data = {
-        "body": "Please purchase the parking fare!",
+    notif_data = json.dumps({
+        "to" : "{}".format(DEVICE_KEY),
+        "data" : {
+        "body": "Please pay the parking fare!",
         "title":"You are going out",
         "timein": time_enter,
         "timeout": time_out,
         "totaltime": duration,
         "fare": price,
         "location": place
-    }
-
-    notif = {
-        "body": "Notification: Bayar woi!",
-        "title": "Notification: You are going out",
-        "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
-    }
+        },
+        "notification": {
+        "body": "Please pay the parking fare!",
+        "title": "You are going out",
+        "click_action": "com.dicoding.nextparking.ui.payment.PaymentActivity"
+        }
+        })
 
     if mode == 'command-line':
-        curl_command_line(data, notif)
-        print('command-line succeeded')
-    
-    if mode == 'request':
-        python_request(data, notif)
-        print('request succeeded')
-
-    if mode == 'pycurl':
-        python_pycurl(data, notif)
-        print('pycurl succeeded')
+        send_notification(notif_data)
+    else:
+        print("wrong argument")

@@ -1,6 +1,6 @@
 import os
 import datetime
-from math import ceil
+from math import ceil, floor
 from werkzeug.datastructures import ImmutableMultiDict
 
 import core.detection_tf as dtf
@@ -33,7 +33,7 @@ db = SQLAlchemy(app)
 from db_models import *
 
 # Import method to send request to android
-from notification import curl_command_line, python_request, python_pycurl
+from notification import send_notification
 
 # API that returns image with detections on it
 @app.route('/image', methods=['POST'])
@@ -106,7 +106,8 @@ def get_image():
             # Add parking fee
             time_enter = datetime.datetime.combine(datetime.date.today(), transaction.time_enter)
             time_out = datetime.datetime.combine(datetime.date.today(), transaction.time_out)
-            time_diff_in_hours = (time_out - time_enter).total_seconds()/3600
+            time_diff = (time_out - time_enter).total_seconds()
+            time_diff_in_hours = time_diff/3600
             if time_diff_in_hours < 1:
                 transaction.price = LOW_PRICE
             else:
@@ -116,27 +117,33 @@ def get_image():
             time_enter = transaction.time_enter
             time_out = transaction.time_out
             price = transaction.price
+            hours = floor(time_diff/3600)
+            minutes = floor((time_diff%3600)/60)
+            seconds = floor(time_diff%60)
+
+            # Query select device_token
+            device_token = db.session.query(Device.device_token).filter_by(id_user=vehicle.id_user).scalar()
 
             # Sent post to android
-            data = jsonify({
-                "body": "Please purchase the parking fare!",
+            notif_data = json.dumps({
+                "to" : "{}".format(device_token),
+                "data" : {
+                "body": "Please pay the parking fare!",
                 "title":"You are going out",
                 "timein": time_enter.strftime("%H:%M:%S"),
                 "timeout": time_out.strftime("%H:%M:%S"),
-                "totaltime": (time_out - time_enter),
-                "fare": str(price),
+                "totaltime": "{}h {}m {}s".format(hours, minutes, seconds),
+                "fare": "Rp {}".format(price),
                 "location": place
+                },
+                "notification": {
+                "body": "Please pay the parking fare!",
+                "title": "You are going out",
+                "click_action": "com.dicoding.nextparking.ui.payment.PaymentActivity"
+                }
             })
 
-            notif = jsonify({
-                "body": "You are entering {} parking lot!".format(place),
-                "title":"You are going in",
-                "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
-            })
-            
-            curl_command_line(data, notif)
-            # python_request(data, notif)
-            # python_pycurl(data, notif)
+            send_notification(notif_data)
 
             return jsonify({
                 "response": "update transaction succeeded",
@@ -168,23 +175,26 @@ def get_image():
 
             time_enter = new_transaction.time_enter
 
-            # Sent post to android
-            data = jsonify({
-                "body": "Please purchase the parking fare!",
-                "title":"You are going out",
-                "timein": time_enter.strftime("%H:%M:%S"),
-                "location": place
-            })
+            # Query select device_token
+            device_token = db.session.query(Device.device_token).filter_by(id_user=vehicle.id_user).scalar()
 
-            notif = jsonify({
+            # Sent post to android
+            notif_data = json.dumps({
+                "to" : "{}".format(device_token),
+                "data" : {
                 "body": "You are entering {} parking lot!".format(place),
                 "title":"You are going in",
-                "click_action": "com.dicoding.nextparking.ui.payment.PayOutActivity"
+                "timein": time_enter.strftime("%H:%M:%S"),
+                "location": place
+                },
+                "notification": {
+                "body": "You are entering {} parking lot!".format(place),
+                "title":"You are going in",
+                "click_action": "com.dicoding.nextparking.ui.payment.PaymentActivity"
+                }
             })
 
-            curl_command_line(data, notif)
-            # python_request(data, notif)
-            # python_pycurl(data, notif)
+            send_notification(notif_data)
 
             return jsonify({
                 "response": "add new transaction record succeed",            
@@ -210,4 +220,4 @@ def get_image():
         }), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
