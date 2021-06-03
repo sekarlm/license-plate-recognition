@@ -95,8 +95,6 @@ def get_image():
         # Filter query to database
         vehicle = db.session.query(Vehicle).filter_by(plate_number=digit_plate).scalar()
         transaction = db.session.query(Transaction).filter_by(plate_number=digit_plate, place=place, isDone=False).scalar()
-        print(vehicle is not None)
-        print(transaction is not None)
 
         # If user with plate_number <digit_plate> parking at <place> --> want to quit parking lot
         if (vehicle is not None) and (transaction is not None):
@@ -198,7 +196,7 @@ def get_image():
                     "notification": {
                     "body": "You are entering {} parking lot!".format(place),
                     "title":"You are going in",
-                    "click_action": "com.dicoding.nextparking.ui.payment.PaymentActivity"
+                    "click_action": "com.dicoding.nextparking.HomeActivity"
                     }
                 })
 
@@ -237,4 +235,4 @@ def get_image():
         return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
