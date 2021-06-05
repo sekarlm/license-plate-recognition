@@ -47,6 +47,10 @@
 <p align="center">
     <img src="contents/ML_flow_result.png" alt="EfficientDet Graph" height="600">
 </p>
+1. To simulate image upload from cctv we create simple web page to upload image of a car with its plate number on it and parking lot location where we park the car.<br />
+2. Then, the input will be processed by two machine learning process. First, YOLO v4 object detector will detect and crop plate number object. The second one is EfficientDet D1 digit detector that will recognize all the digit numbers.<br />
+3. Then, the system will create transaction report based on its condition, wheter it is about to enter or exit the parking lot.<br />
+4. Finally, the system will send notification to android.
 
 ## Acknowledgements
 
