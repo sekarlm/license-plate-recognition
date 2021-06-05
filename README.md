@@ -8,19 +8,26 @@
 ## Built With
 
 - [Tensorflow](https://www.tensorflow.org/)
-- [Pandas](https://pandas.pydata.org/)
+- [OpenCV](https://opencv.org/)
 - [Google Colab](https://colab.research.google.com/)
 
 ## Technique Used
 
-< Explain Here>
+### Object Plate Detection
+<YOLO v4>
+
+### Digit Number Recognition
+<TFOD Api + EfficientDet D1>
 
 ## State of Arts or Journal
 
-< Insert Here >
+### Object Plate Detection
+<SOTA YOLO v4>
+
+### Digit Number Recognition
+<SOTA EfficientDet D1>
 
 ## Explanation For Workflow
-
 < Explain here >
 
 ## Acknowledgements
