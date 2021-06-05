@@ -41,7 +41,7 @@
     <img src="contents/EfficientDetD1.png" alt="Table EfficientDet D1" width="550">
 </p>
 <p>For this project we choose EfficientDet D1. As you can see from the table, compared to the other models in the same distribution, it achieves higher accuracy with 39.6 Average Precision, uses much fewer parameters (6.6 M), and uses fewer computation operations (6.1B FLOPs).</p>
-<p>You can the complete journal <a href="#">here</a>.</p>
+<p>You can the complete journal <a href="https://arxiv.org/abs/1911.09070">here</a>.</p>
 
 ## Explanation For Workflow
 <p align="center">
