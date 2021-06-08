@@ -29,7 +29,7 @@ This is our training result
     <img src="contents/EfficientDet_training.png" alt="Training Result" height="250">
 </p>
 <p>After we trained the model on 441 images of Indonesian License Plate Number, we got 89.7% mAP over 50% IOU threshold and 82.6% mAP over 75% IOU threshold.<p>
-<p>You can see the detail of our training process and dataset that we use <a href="#">here</a>.</p>
+<p>You can see the detail of our training process and dataset that we use <a href="https://github.com/sekarlm/license-plate-recognition/tree/main/digits_recognition">here</a>.</p>
 
 ## State of Arts or Journal
 
