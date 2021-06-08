@@ -19,7 +19,7 @@ For the first process, we use YoloV4 to detect the location of plate number in t
 This is our training result
 
 <p align="center">
-    <img src="contents/yolo_training.png.png" alt="Training Result" height="250">
+    <img src="contents/yolo_training.png" alt="Training Result" height="250">
 </p>
 
 ### Digit Number Detection
