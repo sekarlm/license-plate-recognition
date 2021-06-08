@@ -133,7 +133,7 @@ def get_image():
                     "timein": time_enter.strftime("%H:%M:%S"),
                     "timeout": time_out.strftime("%H:%M:%S"),
                     "totaltime": "{}h {}m {}s".format(hours, minutes, seconds),
-                    "fare": "Rp {}".format(price),
+                    "fare": "{}".format(price),
                     "location": place
                     },
                     "notification": {
